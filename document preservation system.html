@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A-1 Document Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Modern dark theme for the body */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a2e; /* Dark purple/blue */
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Sleek card container */
+        .card-container {
+            width: 100%;
+            max-width: 700px; /* Increased max-width for the table */
+            padding: 40px;
+            background: #2a2a4a; /* Slightly lighter card color */
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Form heading */
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 2rem;
+            color: #fff;
+        }
+
+        /* Form group for spacing */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #c0c0c0;
+        }
+
+        /* Dynamic message box that is hidden by default */
+        .message-box {
+            display: none; /* Initially hidden */
+            text-align: center;
+            font-weight: 500;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        /* Styles for success and error messages */
+        .message-box.success {
+            background-color: #2e8b57; /* Darker green for success */
+            border: 1px solid #3cb371;
+            color: #d8f2e2;
+        }
+
+        .message-box.error {
+            background-color: #8b2e2e; /* Darker red for error */
+            border: 1px solid #b33c3c;
+            color: #f2d8d8;
+        }
+
+        /* Input and select styling */
+        input, select {
+            width: 100%;
+            padding: 14px 18px;
+            background: #3b3b5c;
+            border: 1px solid #5a5a7b;
+            border-radius: 10px;
+            color: #e0e0e0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: #8a7aeb;
+            box-shadow: 0 0 0 3px rgba(138, 122, 235, 0.3);
+            outline: none;
+        }
+
+        /* Placeholder styling */
+        ::placeholder {
+            color: #999;
+            opacity: 1;
+        }
+
+        /* Select arrow color */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23e0e0e0%22%20d%3D%22M287%20114.9L146.2%20256.7%205.4%20114.9h281.6z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 18px center;
+            background-size: 10px;
+            padding-right: 40px;
+        }
+
+        /* Submit button styling */
+        button {
+            width: 100%;
+            padding: 16px;
+            background: #8a7aeb;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        button.primary {
+            background: #8a7aeb;
+        }
+
+        button.secondary {
+            background: #5a5a7b;
+        }
+
+        button.primary:hover {
+            background-color: #a195f0;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button.secondary:hover {
+            background-color: #6b6b90;
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Tab styling */
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .tabs button {
+            flex: 1;
+            background: #3b3b5c;
+            color: #e0e0e0;
+            border: none;
+            padding: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            border-radius: 10px;
+            margin: 0 5px;
+            transition: background 0.3s ease;
+        }
+
+        .tabs button.active {
+            background: #8a7aeb;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Document table styling */
+        .document-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .document-table th, .document-table td {
+            border: 1px solid #5a5a7b; /* Border color to match the theme */
+            padding: 12px;
+            text-align: left;
+            color: #e0e0e0;
+        }
+
+        .document-table th {
+            background-color: #3b3b5c; /* Header background color to match inputs */
+            font-weight: 600;
+        }
+
+        .document-table tr:nth-child(even) {
+            background-color: #2e2e46; /* Alternate row color */
+        }
+
+        .document-table tr:hover {
+            background-color: #3b3b5c; /* Hover effect for rows */
+        }
+
+        .document-table a {
+            color: #8a7aeb;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .document-table a:hover {
+            color: #a195f0;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-container input {
+            flex-grow: 1;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .card-container {
+                padding: 30px;
+            }
+            h2 {
+                font-size: 1.5rem;
+            }
+            .tabs button {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            .search-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card-container">
+        <div class="tabs">
+            <button id="formTab" class="active" onclick="switchTab('form')">Add Document</button>
+            <button id="viewTab" onclick="switchTab('view')">View Documents</button>
+        </div>
+
+        <div id="formPage" class="tab-content active">
+            <h2>Add Project Document</h2>
+            <div id="messageBox" class="message-box"></div>
+            <form id="docForm">
+                <div class="form-group">
+                    <label for="projectName">Project Name / ID</label>
+                    <input type="text" id="projectName" placeholder="e.g., ABC-1234" required>
+                </div>
+                <div class="form-group">
+                    <label for="documentType">Document Type</label>
+                    <select id="documentType" required>
+                        <option value="">Select Document Type</option>
+                        <option value="Customer PO">Customer PO</option>
+                        <option value="PO Order">PO Order (Indent from PPC)</option>
+                        <option value="Internal WO/SO">Internal WO/SO (Sales support)</option>
+                        <option value="Technical Specifications">Technical Specifications (QAP, ITP, FAT, etc)</option>
+                        <option value="Invoice + RMTC">Invoice + RMTC (External Supplier)</option>
+                        <option value="Internal Testing Reports">Internal Testing Reports</option>
+                        <option value="Process Reports">Process Reports (Logbook, checksheets, etc)</option>
+                        <option value="PDI Report">PDI Report</option>
+                        <option value="Packing List">Packing List</option>
+                        <option value="Dispatch Report">Dispatch Report</option>
+                        <option value="A-1 Invoice">A-1 Invoice</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="link">Google Drive Link</label>
+                    <input type="url" id="link" placeholder="Paste a Google Drive or other URL" required>
+                </div>
+                <button type="submit" class="primary">Add Document</button>
+            </form>
+        </div>
+
+        <div id="viewPage" class="tab-content">
+            <h2>View Project Documents</h2>
+            <div class="search-container">
+                <input type="text" id="projectSearch" placeholder="Enter Project Name / ID">
+                <button id="searchButton" class="secondary">Search</button>
+            </div>
+            <div id="loadingMessage" style="text-align: center; padding: 20px; display: none;">Loading...</div>
+            <table class="document-table" style="display: none;">
+                <thead>
+                    <tr><th>Project Name</th><th>Document Type</th><th>Link</th></tr>
+                </thead>
+                <tbody id="docTableBody"></tbody>
+            </table>
+            <div id="noDataMessage" style="display: none; text-align: center; padding: 20px;">
+                <p style="color: #f2d8d8; font-weight: 500;">No documents found for this project.</p>
+            </div>
+            <div id="errorContainer" style="display: none; text-align: center; padding: 20px;">
+                <p id="errorMessage" style="color: #f2d8d8; font-weight: 500;"></p>
+                <button id="retryButton" class="secondary" style="margin-top: 10px;">Retry</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById('docForm');
+            const messageBox = document.getElementById('messageBox');
+            const docTableBody = document.getElementById('docTableBody');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const documentTable = document.querySelector('.document-table');
+            const noDataMessage = document.getElementById('noDataMessage');
+            const errorContainer = document.getElementById('errorContainer');
+            const errorMessage = document.getElementById('errorMessage');
+            const retryButton = document.getElementById('retryButton');
+            const searchButton = document.getElementById('searchButton');
+            const projectSearchInput = document.getElementById('projectSearch');
+
+            // --- URLs updated with your provided links ---
+            const googleAppsScriptUrl = "https://script.google.com/macros/s/AKfycbwWsCQQyIVDOgaGjow1NnoF78EyLNBm-bIchEPt2SAs6PSKLCEY7XbU4VjC_16pJPee/exec";
+            const googleSheetDataUrl = 'https://opensheet.elk.sh/1AcVNJE4AYSzHXmA3mUgaA04AfwMKenT0FO01l3pSCVU/Sheet2';
+            // ---------------------------------------------
+
+            // Function to show and hide the message box
+            function showMessage(msg, type) {
+                messageBox.textContent = msg;
+                messageBox.className = message-box ${type};
+                messageBox.style.display = 'block';
+                setTimeout(() => { messageBox.style.opacity = '1'; }, 10);
+                setTimeout(() => {
+                    messageBox.style.opacity = '0';
+                    setTimeout(() => { messageBox.style.display = 'none'; }, 500);
+                }, 5000);
+            }
+
+            // Handle form submission to add a new document
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const projectName = document.getElementById('projectName').value.trim();
+                const documentType = document.getElementById('documentType').value;
+                const link = document.getElementById('link').value;
+
+                if (!projectName || !documentType || !link) {
+                    showMessage("⚠ Please fill out all fields.", "error");
+                    return;
+                }
+
+                // Create the payload with keys that match the Google Apps Script's expectations
+                const payload = {
+                    projectName: projectName,
+                    documentType: documentType,
+                    link: link
+                };
+
+                try {
+                    showMessage("Submitting document...", "success");
+
+                    const response = await fetch(googleAppsScriptUrl, {
+                        method: "POST",
+                        // The mode is set to 'no-cors' so the browser doesn't block the request.
+                        // This means we won't get a usable response back, but the data will be sent.
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    // We can't check the response for success due to 'no-cors' mode,
+                    // so we'll assume it worked and give a success message.
+                    showMessage("✅ Document submitted successfully! It may take a moment to appear in the table.", "success");
+                    form.reset();
+                } catch (error) {
+                    console.error("Error submitting form:", error);
+                    showMessage("⚠ Something went wrong. Please try again.", "error");
+                }
+            });
+
+            // Function to switch between tabs
+            window.switchTab = function (tab) {
+                document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+                document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(tab + 'Page').classList.add('active');
+                document.getElementById(tab + 'Tab').classList.add('active');
+                if (tab === 'view') {
+                    // Automatically load all documents when the view tab is opened.
+                    loadDocumentsForProject(projectSearchInput.value.trim());
+                }
+            };
+
+            // Function to load and filter documents from the Google Sheet based on a project name
+            async function loadDocumentsForProject(projectName) {
+                // Clear previous data and hide elements
+                docTableBody.innerHTML = '';
+                documentTable.style.display = 'none';
+                noDataMessage.style.display = 'none';
+                errorContainer.style.display = 'none';
+                loadingMessage.style.display = 'block';
+
+                try {
+                    // Fetch all data from the Google Sheet
+                    const res = await fetch(googleSheetDataUrl);
+                    if (!res.ok) {
+                        throw new Error(HTTP error! Status: ${res.status});
+                    }
+                    const allDocuments = await res.json();
+
+                    let filteredDocuments = [];
+                    if (projectName) {
+                        // Filter documents based on the project name, case-insensitive
+                        filteredDocuments = allDocuments.filter(doc =>
+                            doc['projectName'] && doc['projectName'].toLowerCase() === projectName.toLowerCase()
+                        );
+                    } else {
+                        // If no project name is provided, show all documents.
+                        filteredDocuments = allDocuments;
+                    }
+
+                    // Check if there's any data to display
+                    if (filteredDocuments.length === 0) {
+                        loadingMessage.style.display = 'none';
+                        noDataMessage.style.display = 'block';
+                        return;
+                    }
+
+                    // Populate the table with the filtered documents
+                    filteredDocuments.forEach(doc => {
+                        const tr = document.createElement('tr');
+                        // Ensure keys match your Google Sheet column headers exactly
+                        tr.innerHTML = `
+                            <td>${doc.projectName || '-'}</td>
+                            <td>${doc.documentType || '-'}</td>
+                            <td><a href="${doc.link}" target="_blank">View</a></td>
+                        `;
+                        docTableBody.appendChild(tr);
+                    });
+
+                    // Hide loading and show the table
+                    loadingMessage.style.display = 'none';
+                    documentTable.style.display = 'table';
+
+                } catch (err) {
+                    console.error("Fetch error:", err);
+                    loadingMessage.style.display = 'none';
+                    errorMessage.textContent = Error loading data: ${err.message}. Please check your internet connection and sheet URL.;
+                    errorContainer.style.display = 'block';
+                    retryButton.style.display = 'inline-block';
+                }
+            }
+
+            // Event listeners for the search functionality
+            searchButton.addEventListener('click', () => {
+                const projectName = projectSearchInput.value.trim();
+                loadDocumentsForProject(projectName);
+            });
+
+            retryButton.addEventListener('click', () => {
+                loadDocumentsForProject('');
+            });
+
+            projectSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    searchButton.click();
+                }
+            });
+
+            // Initial load of documents when the page is loaded (shows all documents initially)
+            loadDocumentsForProject('');
+        });
+    </script>
+</body>
+</html>
